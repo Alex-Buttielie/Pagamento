@@ -1,6 +1,7 @@
 package br.com.alurafood.pagamentos.services;
 
 import br.com.alurafood.pagamentos.dto.PagamentoDto;
+import br.com.alurafood.pagamentos.http.PedidoClient;
 import br.com.alurafood.pagamentos.model.Pagamento;
 import br.com.alurafood.pagamentos.model.Status;
 import br.com.alurafood.pagamentos.repositories.PagamentoRepository;
@@ -11,12 +12,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.Optional;
 
 @Service
 public class PagamentoService {
 
     @Autowired
     private PagamentoRepository repository;
+
+    @Autowired
+    private PedidoClient pedidoClient;
 
 
     @Autowired
@@ -53,4 +58,14 @@ public class PagamentoService {
         repository.deleteById(id);
     }
 
+    public void confirmarPagamento(Long id) {
+        Optional<Pagamento> pagamento = repository.findById(id);
+        if (!pagamento.isPresent())
+            throw new EntityNotFoundException();
+
+        pagamento.get().setStatus(Status.CONFIRMADO);
+        repository.save(pagamento.get());
+        pedidoClient.atualizaPagamento(pagamento.get().getPedidoId());
+
+    }
 }
