@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 public class PagamentoDto {
-
     private Long id;
     private BigDecimal valor;
     private String nome;
@@ -17,7 +16,8 @@ public class PagamentoDto {
     private String expiracao;
     private String codigo;
     private Status status;
-    private Long pedidoId;
     private Long formaDePagamentoId;
+    private Long pedidoId;
+
 
 }

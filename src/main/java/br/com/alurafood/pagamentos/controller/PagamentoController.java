@@ -1,7 +1,7 @@
 package br.com.alurafood.pagamentos.controller;
 
 import br.com.alurafood.pagamentos.dto.PagamentoDto;
-import br.com.alurafood.pagamentos.services.PagamentoService;
+import br.com.alurafood.pagamentos.service.PagamentoService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,32 +20,33 @@ import java.net.URI;
 public class PagamentoController {
 
     @Autowired
-    private final PagamentoService service;
+    private PagamentoService service;
 
-    public PagamentoController(PagamentoService service) {
-        this.service = service;
-    }
-
-    @GetMapping("/listar")
-    private Page<PagamentoDto> listar(@PageableDefault(size = 10) Pageable pageable) {
-        return service.obterTodos(pageable);
+    @GetMapping
+    public Page<PagamentoDto> listar(@PageableDefault(size = 10) Pageable paginacao) {
+        return service.obterTodos(paginacao);
     }
 
     @GetMapping("/{id}")
-    private ResponseEntity<PagamentoDto> detalhar(@PathVariable @NotNull Long id) {
-        return ResponseEntity.ok(service.obterId(id));
+    public ResponseEntity<PagamentoDto> detalhar(@PathVariable @NotNull Long id) {
+        PagamentoDto dto = service.obterPorId(id);
+
+        return ResponseEntity.ok(dto);
     }
+
 
     @PostMapping
     public ResponseEntity<PagamentoDto> cadastrar(@RequestBody @Valid PagamentoDto dto, UriComponentsBuilder uriBuilder) {
         PagamentoDto pagamento = service.criarPagamento(dto);
         URI endereco = uriBuilder.path("/pagamentos/{id}").buildAndExpand(pagamento.getId()).toUri();
+
         return ResponseEntity.created(endereco).body(pagamento);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PagamentoDto> atualizar(@RequestBody @NotNull Long id, @RequestBody @Valid PagamentoDto dto) {
-        return ResponseEntity.ok(service.atualizarPagamento(id, dto));
+    public ResponseEntity<PagamentoDto> atualizar(@PathVariable @NotNull Long id, @RequestBody @Valid PagamentoDto dto) {
+        PagamentoDto atualizado = service.atualizarPagamento(id, dto);
+        return ResponseEntity.ok(atualizado);
     }
 
     @DeleteMapping("/{id}")
@@ -63,5 +64,6 @@ public class PagamentoController {
     public void pagamentoAutorizadoComIntegracaoPendente(Long id, Exception e){
         service.alteraStatus(id);
     }
+
 
 }
