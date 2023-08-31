@@ -2,6 +2,7 @@ package br.com.alurafood.pagamentos.controller;
 
 import br.com.alurafood.pagamentos.dto.PagamentoDto;
 import br.com.alurafood.pagamentos.services.PagamentoService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,9 +20,13 @@ import java.net.URI;
 public class PagamentoController {
 
     @Autowired
-    private PagamentoService service;
+    private final PagamentoService service;
 
-    @GetMapping()
+    public PagamentoController(PagamentoService service) {
+        this.service = service;
+    }
+
+    @GetMapping("/listar")
     private Page<PagamentoDto> listar(@PageableDefault(size = 10) Pageable pageable) {
         return service.obterTodos(pageable);
     }
@@ -50,8 +55,13 @@ public class PagamentoController {
     }
 
     @PatchMapping("/{id}/confirmar")
+    @CircuitBreaker(name = "atualizaPedido", fallbackMethod = "pagamentoAutorizadoComIntegracaoPendente")
     public void confirmarPagamento(@PathVariable @NotNull Long id){
         service.confirmarPagamento(id);
+    }
+
+    public void pagamentoAutorizadoComIntegracaoPendente(Long id, Exception e){
+        service.alteraStatus(id);
     }
 
 }

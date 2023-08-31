@@ -21,11 +21,10 @@ public class PagamentoService {
     private PagamentoRepository repository;
 
     @Autowired
-    private PedidoClient pedidoClient;
-
+    private ModelMapper mapper;
 
     @Autowired
-    private ModelMapper mapper;
+    private PedidoClient pedido;
 
     public Page<PagamentoDto> obterTodos(Pageable paginacao) {
         return repository
@@ -65,7 +64,20 @@ public class PagamentoService {
 
         pagamento.get().setStatus(Status.CONFIRMADO);
         repository.save(pagamento.get());
-        pedidoClient.atualizaPagamento(pagamento.get().getPedidoId());
+        pedido.atualizaPagamento(pagamento.get().getPedidoId());
 
     }
+
+    public void alteraStatus(Long id) {
+        Optional<Pagamento> pagamento = repository.findById(id);
+
+        if (!pagamento.isPresent()) {
+            throw new EntityNotFoundException();
+        }
+
+        pagamento.get().setStatus(Status.CONFIRMADO_SEM_INTEGRACAO);
+        repository.save(pagamento.get());
+
+    }
+
 }
